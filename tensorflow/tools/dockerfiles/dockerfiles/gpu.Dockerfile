@@ -70,7 +70,8 @@ ENV LANG C.UTF-8
 
 RUN apt-get update && apt-get install -y \
     ${PYTHON} \
-    ${PYTHON}-pip
+    ${PYTHON}-pip \
+    ${PYTHON}-dev
 
 RUN ${PIP} --no-cache-dir install --upgrade \
     pip \
@@ -89,6 +90,17 @@ RUN ln -s $(which ${PYTHON}) /usr/local/bin/python
 ARG TF_PACKAGE=tensorflow
 ARG TF_PACKAGE_VERSION=
 RUN ${PIP} install ${TF_PACKAGE}${TF_PACKAGE_VERSION:+==${TF_PACKAGE_VERSION}}
+
+# SimpleElastix
+RUN dpkg-reconfigure -f noninteractive tzdata
+RUN apt-get install -y cmake swig tcl tcl-dev tk tk-dev
+RUN apt-get install -y git
+RUN git clone https://github.com/SuperElastix/SimpleElastix
+RUN mkdir /build
+RUN cd /build
+RUN cd /build;cmake -D PYTHON_EXECUTABLE=`which `${PYTHON} ../SimpleElastix/SuperBuild
+RUN cd /build;make -j `nproc`
+RUN cd /build/SimpleITK-build/Wrapping/Python/Packaging;${PYTHON} setup.py install
 
 COPY bashrc /etc/bash.bashrc
 RUN chmod a+rwx /etc/bash.bashrc
